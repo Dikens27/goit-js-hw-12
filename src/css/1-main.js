@@ -8,6 +8,13 @@ const form = document.querySelector(".form");
 const gallery = document.querySelector(".gallery");
 const loader = document.querySelector(".loader");
 
+const instance = axios.create({
+    baseURL: 'https://pixabay.com/api/',
+    headers: {
+        'Content-Type': 'application/json'
+    }
+});
+
 form.addEventListener("submit", async (event) => {
     event.preventDefault();
     showLoader();
@@ -30,26 +37,24 @@ form.addEventListener("submit", async (event) => {
     }
 });
 
+const url = new URL("https://pixabay.com/api/");
+
 async function getIMG(query = "") {
-    const instance = axios.create({
-        baseURL: 'https://pixabay.com/api/',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        params: {
-            key: "41729431-93e496ed3cd794296b45db789",
-            q: query,
-            image_type: "photo",
-            orientation: "horizontal",
-            safesearch: "true"
-        }
-    });
+    const params = {
+        key: "41729431-93e496ed3cd794296b45db789",
+        q: query,
+        image_type: "photo",
+        orientation: "horizontal",
+        safesearch: "true",
+    }
+
+    url.search = new URLSearchParams(params);
 
     try {
-        const response = await instance.get();
+        const response = await axios.get(url);
         return response.data
     } catch (error) {
-        console.error("Опять шось не то");
+        console.error("durak")
         // showErrorToast();
     }
 

@@ -49,7 +49,7 @@ async function getIMG(query = "") {
         const response = await instance.get();
         return response.data
     } catch (error) {
-        console.error("Опять шось не то");
+        console.error("durak")
         // showErrorToast();
     }
 
