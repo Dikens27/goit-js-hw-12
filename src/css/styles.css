@@ -76,6 +76,7 @@ body {
   gap: 24px 24px;
   padding-left: 0;
   justify-content: center;
+  margin-bottom: 32px;
 }
 
 .gallery-image {
@@ -139,4 +140,21 @@ body {
   }
 }
 
+.load-more {
+  display: none;
+  padding: 8px 16px;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  border-radius: 8px;
+  background: #4E75FF;
+  border: none;
+  cursor: pointer;
+  color: #FFF;
+  font-weight: 500;
+  margin-bottom: 32px;
+}
 
+.load-more:hover {
+  background: #6C8CFF;
+}

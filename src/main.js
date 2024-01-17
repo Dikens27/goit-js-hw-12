@@ -7,6 +7,7 @@ import "simplelightbox/dist/simple-lightbox.min.css";
 const form = document.querySelector(".form");
 const gallery = document.querySelector(".gallery");
 const loader = document.querySelector(".loader");
+const btnLoadMore = document.querySelector(".load-more");
 
 form.addEventListener("submit", async (event) => {
     event.preventDefault();
@@ -21,6 +22,7 @@ form.addEventListener("submit", async (event) => {
         try {
             const images = await getIMG(q);
             renderIMG(images);
+            btnLoadMore.style.display = 'block';
         } catch (error) {
             console.error(error);
             showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
@@ -31,6 +33,9 @@ form.addEventListener("submit", async (event) => {
 });
 
 async function getIMG(query = "") {
+    let page = 1;
+    let perPage = 40;
+
     const instance = axios.create({
         baseURL: 'https://pixabay.com/api/',
         headers: {
@@ -41,7 +46,9 @@ async function getIMG(query = "") {
             q: query,
             image_type: "photo",
             orientation: "horizontal",
-            safesearch: "true"
+            safesearch: "true",
+            page: page,
+            perPage: perPage,
         }
     });
 
@@ -49,8 +56,7 @@ async function getIMG(query = "") {
         const response = await instance.get();
         return response.data
     } catch (error) {
-        console.error("Опять шось не то");
-        // showErrorToast();
+        showErrorToast();
     }
 
     const data = await response.json();
@@ -100,7 +106,7 @@ function renderIMG(images) {
         if (images === undefined) {
             return;
         } else {
-            const markup = images.map(image => getImageHTML(image)).join("");
+            const markup = images.hits.map(image => getImageHTML(image)).join("");
             gallery.insertAdjacentHTML("beforeend", markup);
             lightbox.refresh();         
             hideLoader();
