@@ -12,22 +12,25 @@ const btnLoadMore = document.querySelector(".load-more");
 let page = 1;
 let isLastPage = false;
 const perPage = 40;
+let q;
+let totalHits;
 
 form.addEventListener("submit", async (event) => {
     event.preventDefault();
+    page = 1;
     showLoader();
+    gallery.innerHTML = "";
 
-    const q = event.currentTarget.elements.search.value.trim();
-    // const fetchIMG = createGetIMGRequest();////////////////////////////////////////////////////////////////////////
+    q = event.currentTarget.elements.search.value.trim();
    
     if (q.length === 0) {
         showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
         hideLoader();
     } else {
         try {
+            btnLoadMore.style.display = 'none';
             const images = await getIMG(q);
             renderIMG(images);
-            btnLoadMore.style.display = 'block';
         } catch (error) {
             console.error(error);
             showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
@@ -56,41 +59,57 @@ async function getIMG(query = "") {
 
     try {
         const response = await instance.get();
-        return response.data;
-    } catch {
-        // отут помилка не спрацьовує при поганому запиті/////////////////////////////////////////////////////////////////
-        showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
-    }
 
-    const data = await response.json();
-    
-    if (data.hits.length) {
-        return data.hits;
-    } else {
+        const data = await response.data;
+        console.log(data);
+        if (data.hits.length) {
+            totalHits = data.totalHits;
+            return data.hits;
+        } else {
+            showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
+            hideLoader();
+            return;
+        }
+    } catch {
         showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
-        hideLoader();
-        return [];
+        return;
     }
 }
-// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-const createGetIMGRequest = (q) => {
-    return async () => {
+
+const createGetIMGRequest = async () => {
         try {
-            if (isLastPage) return;
-
-            const { img, totalResults } = await getIMG({ page, perPage, q });
-            if (page >= totalResults / perPage) {
-                isLastPage = true;
+            if (isLastPage) {
+                showErrorToast("We're sorry, but you've reached the end of search results.");
+                return;
             }
+            
+            page++;
 
-            page += 1;
-
-            return img;
+            try {
+            showLoader();
+            btnLoadMore.style.display = 'none';
+            const images = await getIMG(q);
+            renderIMG(images);
+            } catch (error) {
+            console.error(error);
+            showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
+            } finally {
+            hideLoader();
+            }
+            if (page >= totalHits / perPage) {
+                isLastPage = true;
+                btnLoadMore.style.display = 'none';
+                showErrorToast("We're sorry, but you've reached the end of search results.");
+            }
         } catch {
             showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
         }
-    }
+    // }
 }
+
+btnLoadMore.addEventListener('click', (event) => {
+    createGetIMGRequest();
+});
 // ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const getImageHTML = ({largeImageURL, webformatURL, tags, likes, views, comments, downloads}) => `           
     <li class="gallery-item">
@@ -124,14 +143,20 @@ const getImageHTML = ({largeImageURL, webformatURL, tags, likes, views, comments
 const lightbox = new SimpleLightbox('.gallery a', { captionsData: 'alt', captionDelay: 250 });
 
 function renderIMG(images) {
-    gallery.innerHTML = "";
+    console.log(images);
+    // gallery.innerHTML = "";
         if (images === undefined) {
             return;
         } else {
-            const markup = images.hits.map(image => getImageHTML(image)).join("");
+            const markup = images.map((image => {
+                    return getImageHTML(image);
+                })).join("");
             gallery.insertAdjacentHTML("beforeend", markup);
             lightbox.refresh();         
             hideLoader();
+            if (Math.floor(totalHits / perPage) > 0) {
+                btnLoadMore.style.display = 'block';
+            }
         }
 }
 
