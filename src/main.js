@@ -9,11 +9,16 @@ const gallery = document.querySelector(".gallery");
 const loader = document.querySelector(".loader");
 const btnLoadMore = document.querySelector(".load-more");
 
+let page = 1;
+let isLastPage = false;
+const perPage = 40;
+
 form.addEventListener("submit", async (event) => {
     event.preventDefault();
     showLoader();
 
     const q = event.currentTarget.elements.search.value.trim();
+    // const fetchIMG = createGetIMGRequest();////////////////////////////////////////////////////////////////////////
    
     if (q.length === 0) {
         showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
@@ -33,9 +38,6 @@ form.addEventListener("submit", async (event) => {
 });
 
 async function getIMG(query = "") {
-    let page = 1;
-    let perPage = 40;
-
     const instance = axios.create({
         baseURL: 'https://pixabay.com/api/',
         headers: {
@@ -48,15 +50,16 @@ async function getIMG(query = "") {
             orientation: "horizontal",
             safesearch: "true",
             page: page,
-            perPage: perPage,
+            per_page: perPage,
         }
     });
 
     try {
         const response = await instance.get();
-        return response.data
-    } catch (error) {
-        showErrorToast();
+        return response.data;
+    } catch {
+        // отут помилка не спрацьовує при поганому запиті/////////////////////////////////////////////////////////////////
+        showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
     }
 
     const data = await response.json();
@@ -69,7 +72,26 @@ async function getIMG(query = "") {
         return [];
     }
 }
+// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+const createGetIMGRequest = (q) => {
+    return async () => {
+        try {
+            if (isLastPage) return;
 
+            const { img, totalResults } = await getIMG({ page, perPage, q });
+            if (page >= totalResults / perPage) {
+                isLastPage = true;
+            }
+
+            page += 1;
+
+            return img;
+        } catch {
+            showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
+        }
+    }
+}
+// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 const getImageHTML = ({largeImageURL, webformatURL, tags, likes, views, comments, downloads}) => `           
     <li class="gallery-item">
         <div class=gallery-card>
