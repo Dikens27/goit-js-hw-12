@@ -24,7 +24,7 @@ form.addEventListener("submit", async (event) => {
     q = event.currentTarget.elements.search.value.trim();
    
     if (q.length === 0) {
-        showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
+        showErrorToast(errorMessage);
         hideLoader();
     } else {
         try {
@@ -33,7 +33,7 @@ form.addEventListener("submit", async (event) => {
             renderIMG(images);
         } catch (error) {
             console.error(error);
-            showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
+            showErrorToast(errorMessage);
         } finally {
             hideLoader();
         }
@@ -61,17 +61,16 @@ async function getIMG(query = "") {
         const response = await instance.get();
 
         const data = await response.data;
-        console.log(data);
         if (data.hits.length) {
             totalHits = data.totalHits;
             return data.hits;
         } else {
-            showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
+            showErrorToast(errorMessage);
             hideLoader();
             return;
         }
     } catch {
-        showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
+        showErrorToast(errorMessage);
         return;
     }
 }
@@ -90,9 +89,13 @@ const createGetIMGRequest = async () => {
             btnLoadMore.style.display = 'none';
             const images = await getIMG(q);
             renderIMG(images);
+            window.scrollBy({
+                top: getScroll() * 2,
+                behavior: "smooth"
+            });
             } catch (error) {
             console.error(error);
-            showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
+            showErrorToast(errorMessage);
             } finally {
             hideLoader();
             }
@@ -102,20 +105,19 @@ const createGetIMGRequest = async () => {
                 showErrorToast("We're sorry, but you've reached the end of search results.");
             }
         } catch {
-            showErrorToast("Sorry, there are no images matching your search query. Please try again!Reqest is not ok");
+            showErrorToast(errorMessage);
         }
-    // }
 }
 
 btnLoadMore.addEventListener('click', (event) => {
     createGetIMGRequest();
 });
-// ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 const getImageHTML = ({largeImageURL, webformatURL, tags, likes, views, comments, downloads}) => `           
     <li class="gallery-item">
         <div class=gallery-card>
             <a class="gallery-link" href="${largeImageURL}">
-                <img class="gallery-image" src="${webformatURL}" alt="${tags}" width:"360" height:"200" />
+                <img class="gallery-image" src="${webformatURL}" alt="${tags}" width="360" height="200" />
             </a>
 
             <ul class="gallery-card-list">
@@ -143,21 +145,25 @@ const getImageHTML = ({largeImageURL, webformatURL, tags, likes, views, comments
 const lightbox = new SimpleLightbox('.gallery a', { captionsData: 'alt', captionDelay: 250 });
 
 function renderIMG(images) {
-    console.log(images);
-    // gallery.innerHTML = "";
-        if (images === undefined) {
-            return;
-        } else {
-            const markup = images.map((image => {
-                    return getImageHTML(image);
-                })).join("");
-            gallery.insertAdjacentHTML("beforeend", markup);
-            lightbox.refresh();         
-            hideLoader();
-            if (Math.floor(totalHits / perPage) > 0) {
-                btnLoadMore.style.display = 'block';
-            }
+    if (images === undefined) {
+        return;
+    } else {
+        const markup = images.map((image => {
+            return getImageHTML(image);
+        })).join("");
+        gallery.insertAdjacentHTML("beforeend", markup);
+        lightbox.refresh();         
+        hideLoader();
+        if (Math.floor(totalHits / perPage) > 0) {
+            btnLoadMore.style.display = 'block';
         }
+    }
+}
+
+function getScroll() {
+    const li = document.querySelector(".gallery-item");
+    const scrol = li.getBoundingClientRect().height;
+    return scrol;
 }
 
 function showErrorToast(message) {
@@ -170,6 +176,8 @@ function showErrorToast(message) {
     });
 }
 
+const errorMessage = "Sorry, there are no images matching your search query. Please try again!Reqest is not ok";
+
 function showLoader() {
     loader.classList.add('loading');
 }
@@ -177,3 +185,4 @@ function showLoader() {
 function hideLoader() {
     loader.classList.remove('loading');
 }
+
