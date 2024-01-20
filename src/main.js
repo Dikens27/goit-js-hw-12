@@ -8,6 +8,7 @@ const form = document.querySelector(".form");
 const gallery = document.querySelector(".gallery");
 const loader = document.querySelector(".loader");
 const btnLoadMore = document.querySelector(".load-more");
+const lightbox = new SimpleLightbox('.gallery a', { captionsData: 'alt', captionDelay: 250 });
 
 let page = 1;
 let isLastPage = false;
@@ -20,6 +21,7 @@ form.addEventListener("submit", async (event) => {
     page = 1;
     showLoader();
     gallery.innerHTML = "";
+    isLastPage = false;
 
     q = event.currentTarget.elements.search.value.trim();
    
@@ -141,8 +143,6 @@ const getImageHTML = ({largeImageURL, webformatURL, tags, likes, views, comments
         </div>
     </li>
 `
-
-const lightbox = new SimpleLightbox('.gallery a', { captionsData: 'alt', captionDelay: 250 });
 
 function renderIMG(images) {
     if (images === undefined) {
